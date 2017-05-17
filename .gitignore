@@ -1,10 +1,6 @@
-ebin/
-deps/
+_build/
 tests/
 /basho_bench
-/rel/basho_bench
-package
-.rebar
 *~
 #*#
-
+.swp
