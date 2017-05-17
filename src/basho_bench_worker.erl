@@ -88,7 +88,7 @@ stop(Pids) ->
 %% gen_server callbacks
 %% ====================================================================
 
-init([SupChild, {WorkerType, WorkerId, WorkerGlobalId}=Id, WorkerConf]) ->
+init([SupChild, {WorkerType, _WorkerId, WorkerGlobalId}=Id, WorkerConf]) ->
     %% Set local worker config here and for subprocess during worker_init
     basho_bench_config:set_local_config(WorkerConf),
 
@@ -104,7 +104,7 @@ init([SupChild, {WorkerType, WorkerId, WorkerGlobalId}=Id, WorkerConf]) ->
     {A1, A2, A3} =
         case basho_bench_config:get(rng_seed, {42, 23, 12}) of
             {Aa, Ab, Ac} -> {Aa, Ab, Ac};
-            now -> now()
+            now -> erlang:timestamp()
         end,
 
     RngSeed = {A1 + WorkerGlobalId, A2 + WorkerGlobalId, A3 + WorkerGlobalId},
@@ -217,7 +217,7 @@ worker_init(State) ->
     process_flag(trap_exit, true),
     %% Publish local config into worker subprocess
     basho_bench_config:set_local_config(State#state.local_config),
-    random:seed(State#state.rng_seed),
+    rand:seed(State#state.rng_seed),
     worker_idle_loop(State).
 
 worker_idle_loop(State) ->
@@ -281,7 +281,7 @@ worker_next_op2(State, OpTag) ->
     end.
 
 worker_next_op(State) ->
-    {Label, OpTag} = element(random:uniform(State#state.ops_len), State#state.ops),
+    {Label, OpTag} = element(rand:uniform(State#state.ops_len), State#state.ops),
     Start = os:timestamp(),
     Result = worker_next_op2(State, OpTag),
     ElapsedUs = erlang:max(0, timer:now_diff(os:timestamp(), Start)),
