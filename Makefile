@@ -10,7 +10,7 @@ OVERLAY_VARS    ?=
 
 all: compile
 	rebar3 escriptize
-	@ln -s _build/default/bin/basho_bench basho_bench
+	@ln -sf _build/default/bin/basho_bench basho_bench
 
 compile:
 	rebar3 compile
