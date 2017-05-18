@@ -5,7 +5,6 @@
    - All of the old built in drivers are gone (which makes it nice and clean
      to benchmark your not-riak project.)
    - You need to use rebar3 to compile the project.
-   - Folsom seems moribund upstream. Working on that.
 
 ** Overview
 
@@ -34,7 +33,7 @@
    to build the project.
 
 #+BEGIN_SRC shell
-git clone git://github.com/basho/basho_bench.git
+git clone git://github.com/mrallen1/basho_bench.git
 cd basho_bench
 make all
 #+END_SRC
