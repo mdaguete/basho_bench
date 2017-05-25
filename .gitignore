@@ -1,6 +1,7 @@
 _build/
 tests/
+log/
 /basho_bench
 *~
 #*#
-.swp
+*.swp
