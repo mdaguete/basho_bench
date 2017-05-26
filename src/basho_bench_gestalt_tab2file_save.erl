@@ -17,9 +17,9 @@ new(_Id) ->
     ok = wait_for({fun() -> table_ready(Name) end, table_ready}, 10),
     {ok, #{ tab => Name }}.
 
-run(put, _KeyGen, _ValGen, S = #{ tab := N, cur := Cur }) when Cur == 999999 ->
+run(put, _KeyGen, _ValGen, S = #{ tab := N, cur := Cur }) when Cur == 2999999 ->
     %% do save
-    wait_for({fun() -> ets_full(N, 1000000) end, ets_full}, 10),
+    wait_for({fun() -> ets_full(N, 3000000) end, ets_full}, 10),
     D = basho_bench_config:get(gestalt_save_dir, "/tmp"),
     Fn = basho_bench_config:get(gestalt_file, gen_file_name("gestalt_save")),
     Path = filename:join(D, Fn),
