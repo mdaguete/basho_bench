@@ -9,29 +9,39 @@
 
 new({_,1,_}) ->
     Name = basho_bench_config:get(gestalt_tab_name),
+    Cutoff = basho_bench_config:get(gestalt_key_cutoff),
     Pid = spawn(fun() -> spawn_ets(Name) end),
     ?INFO("Spawned ETS ~p", [Pid]),
-    {ok, #{ tab => Name }};
+    {ok, #{ tab => Name, cur => 0, cutoff => Cutoff }};
 new(_Id) ->
     Name = basho_bench_config:get(gestalt_tab_name),
+    Cutoff = basho_bench_config:get(gestalt_key_cutoff),
     ok = wait_for({fun() -> table_ready(Name) end, table_ready}, 10),
-    {ok, #{ tab => Name }}.
+    {ok, #{ cutoff => Cutoff, cur => 0, tab => Name }}.
 
-run(put, _KeyGen, _ValGen, S = #{ tab := N, cur := Cur }) when Cur == 2999999 ->
-    %% do save
-    wait_for({fun() -> ets_full(N, 3000000) end, ets_full}, 10),
+run(put, KeyGen, ValGen, #{ cutoff := Cutoff, cur := Cur } = S) ->
+    NewState = case Cur == Cutoff of
+        true ->
+            do_save(S);
+        false ->
+            do_put(KeyGen, ValGen, S)
+    end,
+    {ok, NewState}.
+
+do_save(S = #{ cutoff := Cutoff, tab := N }) ->
+    wait_for({fun() -> ets_full(N, Cutoff+1) end, ets_full}, 10),
     D = basho_bench_config:get(gestalt_save_dir, "/tmp"),
     Fn = basho_bench_config:get(gestalt_file, gen_file_name("gestalt_save")),
     Path = filename:join(D, Fn),
     ok = filelib:ensure_dir(Path),
     {Time, ok} = timer:tc(fun() -> ets:tab2file(N, Path) end),
     ?INFO("Took ~w microseconds to store ~p~n", [Time, Path]),
-    {ok, S#{ cur => 1000000}};
+    S#{ cur => Cutoff+1}.
 
-run(put, KeyGen, ValGen, #{ tab := Name } = S) ->
+do_put(KeyGen, ValGen, S = #{ tab := Name }) ->
     Key = KeyGen(),
     true = ets:insert(Name, {Key, ValGen()}),
-    {ok, S#{ cur => Key }}.
+    S#{ cur => Key }.
 
 gen_file_name(Prefix) ->
     {{Y,M,D},{H,Mn,S}} = calendar:now_to_datetime(erlang:timestamp()),
