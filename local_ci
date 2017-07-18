@@ -1,0 +1,9 @@
+#!/bin/bash
+
+BUILD_DIR="$(pwd)"
+JOB=minloadtest
+
+./ci before_install ${JOB:?} "${BUILD_DIR:?}" && \
+    ./ci install ${JOB:?} "${BUILD_DIR:?}" && \
+    ./ci before_script ${JOB:?} "${BUILD_DIR:?}" && \
+    ./ci script ${JOB:?} "${BUILD_DIR:?}"

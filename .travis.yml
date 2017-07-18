@@ -6,13 +6,15 @@ before_install:
   - ./ci before_install ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 install:
   - ./ci install ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
+before_script:
+  - ./ci before_script ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 script:
   - ./ci script ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 matrix:
   allow_failures:
   fast_finish: true
 env:
-  - JOB=make
+  - JOB=minloadtest
   - JOB=dialyzer
   - JOB=xref
 cache:
