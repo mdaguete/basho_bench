@@ -63,7 +63,7 @@ new({uniform_int, MaxVal}, _Id)
     fun() -> rand:uniform(MaxVal) end;
 new({uniform_int, MinVal, MaxVal}, _Id)
   when is_integer(MinVal), is_integer(MaxVal), MaxVal > MinVal ->
-    fun() -> rand:uniform(MinVal, MaxVal) end;
+    fun() -> MinVal + (rand:uniform((MaxVal - MinVal) + 1) - 1) end;
 new(Other, _Id) ->
     ?FAIL_MSG("Invalid value generator requested: ~p\n", [Other]).
 
