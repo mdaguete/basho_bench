@@ -207,6 +207,8 @@ dimension({partitioned_sequential_int, MaxKey}) ->
     MaxKey;
 dimension({uniform_int, MaxKey}) ->
     MaxKey;
+dimension({uniform_int, _StartKey, NumKeys}) ->
+    NumKeys;
 dimension({truncated_pareto_int, MaxKey}) ->
     MaxKey;
 dimension(Bin) when is_binary(Bin) ->
