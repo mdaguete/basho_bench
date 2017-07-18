@@ -2,6 +2,10 @@ sudo: false
 language: erlang
 otp_release:
   - 19.3.6.1
+addons:
+  apt:
+    packages:
+      - r-base
 before_install:
   - ./ci before_install ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 install:
