@@ -217,7 +217,7 @@ worker_init(State) ->
     process_flag(trap_exit, true),
     %% Publish local config into worker subprocess
     basho_bench_config:set_local_config(State#state.local_config),
-    rand:seed(State#state.rng_seed),
+    rand:seed(exsplus, State#state.rng_seed),
     worker_idle_loop(State).
 
 worker_idle_loop(State) ->
