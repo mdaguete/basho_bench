@@ -17,6 +17,7 @@ case "${1:?}"-${2:?} in
         ( ls "${BuildDir:?}"/tmp/eleveldb/ebin; )
         ( ls "${BuildDir:?}"/tmp/eleveldb/priv; )
         ( ls "${BuildDir:?}"/tmp/eleveldb/c_src/system/lib; )
+        ( cd "${BuildDir:?}"/tmp && mkdir R_libs; )
         ;;
     install-dialyzer)
         BuildDir="${3:?}"
@@ -39,7 +40,7 @@ case "${1:?}"-${2:?} in
         BuildDir="${3:?}"
         ( cd "${BuildDir:?}" && PATH="${BuildDir:?}":"$PATH" make; )
         ( cd "${BuildDir:?}" && ./basho_bench --results-dir ./tests ./examples/eleveldb_load.config; )
-        ( cd "${BuildDir:?}" && make results && file ./tests/current/summary.png; )
+        ( cd "${BuildDir:?}" && R_LIBS="${BuildDir:?}"/tmp/R_libs && export R_LIBS && make results && file ./tests/current/summary.png; )
         ;;
     script-dialyzer)
         BuildDir="${3:?}"
