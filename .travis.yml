@@ -1,13 +1,11 @@
 dist: trusty
-sudo: false
+sudo: required
 language: erlang
 otp_release:
   - 19.3.6.1
-addons:
-  apt:
-    packages:
-      - r-base
 before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y r-cran-plyr r-cran-ggplot2
   - ./ci before_install ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 install:
   - ./ci install ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
