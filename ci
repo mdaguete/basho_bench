@@ -40,7 +40,7 @@ case "${1:?}"-${2:?} in
         BuildDir="${3:?}"
         ( cd "${BuildDir:?}" && PATH="${BuildDir:?}":"$PATH" make; )
         ( cd "${BuildDir:?}" && ./basho_bench --results-dir ./tests ./examples/eleveldb_load.config; )
-        ( cd "${BuildDir:?}" && R_LIBS="${BuildDir:?}"/tmp/R_libs && export R_LIBS && make results && file ./tests/current/summary.png; )
+        ( cd "${BuildDir:?}" && ( R_LIBS="${BuildDir:?}"/tmp/R_libs && export R_LIBS && make results; ) && ( cd ./tests/current && ls -l; ) && file ./tests/current/summary.png; )
         ;;
     script-dialyzer)
         BuildDir="${3:?}"
