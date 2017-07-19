@@ -15,6 +15,7 @@ script:
   - ./ci script ${JOB:?} "${TRAVIS_BUILD_DIR:?}"
 matrix:
   allow_failures:
+    - env: JOB=xref
   fast_finish: true
 env:
   - JOB=minloadtest
