@@ -1,5 +1,7 @@
 * basho_bench
 
+Build Status: [[https://travis-ci.org/mrallen1/basho_bench.svg]]
+
 ** Changes from upstream
 
    - All of the old built in drivers are gone (which makes it nice and clean

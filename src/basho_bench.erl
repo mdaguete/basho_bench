@@ -71,6 +71,11 @@ setup_benchmark(Opts) ->
 
 run_benchmark(Configs) ->
     TestDir = get_test_dir(),
+
+    %% Make sure this happens after starting lager or failures wont
+    %% show.
+    basho_bench_config:load(Configs),
+
     %% Init code path
     add_code_paths(basho_bench_config:get(code_paths, [])),
 
@@ -82,10 +87,6 @@ run_benchmark(Configs) ->
         SourceDir ->
             load_source_files(SourceDir)
     end,
-
-    %% Make sure this happens after starting lager or failures wont
-    %% show.
-    basho_bench_config:load(Configs),
 
     %% Copy the config into the test dir for posterity
     [ begin {ok, _} = file:copy(Config, filename:join(TestDir, filename:basename(Config))) end

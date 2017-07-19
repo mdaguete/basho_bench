@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -ev # Ref https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
+
+case "${1:?}"-${2:?} in
+    before_install-*)
+        ## Travis CI does not support rebar3 yet. See https://github.com/travis-ci/travis-ci/issues/6506#issuecomment-275189490
+        BuildDir="${3:?}"
+        curl -fL -o "${BuildDir:?}"/rebar3 https://github.com/erlang/rebar3/releases/download/3.4.2/rebar3
+        chmod +x "${BuildDir:?}"/rebar3
+        ;;
+    install-minloadtest)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && git show c939b69~1:src/basho_bench_driver_eleveldb.erl | sed -e 's|^new(Id) ->|new({_,_,Id}) ->|' > src/basho_bench_driver_eleveldb.erl; )
+        ( cd "${BuildDir:?}" && mkdir tmp; )
+        ( cd "${BuildDir:?}"/tmp && git clone https://github.com/basho/eleveldb.git && cd eleveldb && git checkout 2.0.34 && make; )
+        ( ls "${BuildDir:?}"/tmp/eleveldb/ebin; )
+        ( ls "${BuildDir:?}"/tmp/eleveldb/priv; )
+        ( ls "${BuildDir:?}"/tmp/eleveldb/c_src/system/lib; )
+        ( cd "${BuildDir:?}"/tmp && mkdir R_libs; )
+        ;;
+    install-dialyzer)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && ./rebar3 tree; )
+        ( cd "${BuildDir:?}" && ./rebar3 dialyzer -u true -s false; )
+        ;;
+    install-*)
+        true
+        ;;
+    before_script-minloadtest)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && sed -i'.bak' -e 's|duration, 10|duration, 1|' -e 's|<path to eleveldb>/ebin|./tmp/eleveldb/ebin|' -e 's|eleveldb_dir, "/tmp/eleveldb.bench"|eleveldb_dir, "./tmp/eleveldb.bench"|' examples/eleveldb_load.config; )
+        ( cat "${BuildDir:?}"/examples/eleveldb_load.config; )
+        ( cd "${BuildDir:?}"/tmp && mkdir eleveldb.bench; )
+        ;;
+    before_script-*)
+        true
+        ;;
+    script-minloadtest)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && PATH="${BuildDir:?}":"$PATH" make; )
+        ( cd "${BuildDir:?}" && ./basho_bench --results-dir ./tests ./examples/eleveldb_load.config; )
+        ( cd "${BuildDir:?}" && ( R_LIBS="${BuildDir:?}"/tmp/R_libs && export R_LIBS && make results; ) && ( cd ./tests/current && ls -l; ) && file ./tests/current/summary.png; )
+        ;;
+    script-dialyzer)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && ./rebar3 dialyzer; )
+        ;;
+    script-xref)
+        BuildDir="${3:?}"
+        ( cd "${BuildDir:?}" && ./rebar3 xref; )
+        ;;
+esac
