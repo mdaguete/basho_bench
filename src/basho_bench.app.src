@@ -8,7 +8,8 @@
         stdlib,
         lager,
         sasl,
-        folsom
+        folsom,
+        hackney
     ]},
     {mod, {basho_bench_app, []}},
     {env, [

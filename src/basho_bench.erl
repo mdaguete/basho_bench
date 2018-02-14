@@ -62,6 +62,7 @@ setup_benchmark(Opts) ->
     CustomLagerLevel = basho_bench_config:get(log_level, debug),
     lager:set_loglevel(lager_console_backend, CustomLagerLevel),
     lager:set_loglevel(lager_file_backend, ConsoleLog, CustomLagerLevel),
+    lager:info("========================================================================= OPTS: ~p",[Opts]),
     case basho_bench_config:get(distribute_work, false) of 
         true -> setup_distributed_work();
         false -> ok
@@ -74,7 +75,7 @@ run_benchmark(Configs) ->
 
     %% Make sure this happens after starting lager or failures wont
     %% show.
-    basho_bench_config:load(Configs),
+    %% basho_bench_config:load(Configs),
 
     %% Init code path
     add_code_paths(basho_bench_config:get(code_paths, [])),
@@ -118,6 +119,7 @@ main(Args) ->
     ok = maybe_net_node(Opts),
     ok = maybe_join(Opts),
     {ok, _} = start(),
+    basho_bench_config:load(Configs),
     setup_benchmark(Opts),
     run_benchmark(Configs),
     await_completion(infinity).
@@ -273,6 +275,7 @@ get_addr_args() ->
     StrAddrs = [inet:ntoa(Addr) || Addr <- Addrs],
     string:join(StrAddrs, " ").
 setup_distributed_work() ->
+    lager:info(" =================================================> DISTRIBUTED"),
     case node() of 
         'nonode@nohost' -> 
             ?STD_ERR("Basho bench not started in distributed mode, and distribute_work = true~n", []),
@@ -306,6 +309,7 @@ deploy_module(Module) ->
     end.
 
 distribute_app(App) ->
+    lager:info("Distributed app ~p",[App]),
     % :(. This is super hackish, it depends on a bunch of assumptions
     % But, unfortunately there are negative interactions with escript and slave nodes
     CodeExtension = code:objfile_extension(),

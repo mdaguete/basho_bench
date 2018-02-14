@@ -25,6 +25,7 @@
          run/4]).
 
 -include("basho_bench.hrl").
+-include_lib("erlcloud/include/erlcloud_aws.hrl").
 
 
 -record(state, {bucket}).
@@ -35,6 +36,7 @@
 
 new(_Id) ->
 	%% Ensure that erlcloud is up
+	application:ensure_all_started(hackney),
 	application:ensure_all_started(erlcloud),
 
 	%% Configure erlcloud
@@ -46,6 +48,18 @@ new(_Id) ->
 	Bucket    = basho_bench_config:get(cs_bucket, "bench-test"),
 
 	erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol),
+
+	put(aws_config, #aws_config{
+		access_key_id=AccessKey,
+		secret_access_key=SecretKey,
+		s3_host=Host,
+		s3_port=Port,
+		s3_scheme=Protocol,
+		s3_bucket_access_method=path,
+		http_client=hackney,
+		hackney_pool = undefined
+	}),
+
 	erlcloud_s3:create_bucket(Bucket),
 
 	{ok, #state {bucket=Bucket}}.
@@ -58,9 +72,13 @@ run(put, KeyGen, ValueGen, State) ->
 		Value = ValueGen(),
 		erlcloud_s3:put_object(State#state.bucket, integer_to_list(Key), Value),
 		{ok, State}
-	catch _X:_Y ->
-		?ERROR("Error on PUT ~p: ~p ~p\n", [Key, _X, _Y]),
-		{ok, State}
+	catch
+		_X:{aws_error,{http_error,404,_,_}} = _Y ->
+			?ERROR("Error on PUT ~p: ~p ~p\n", [Key, _X, _Y]),
+			{error, not_found, State};
+		_X:{aws_error,{socket_error,timeout}} = _Y ->
+			?ERROR("Error on PUT ~p: ~p ~p\n", [Key, _X, _Y]),
+			{error, timeout, State}
 	end;
 
 run(get, KeyGen, _ValueGen, State) ->
@@ -68,9 +86,13 @@ run(get, KeyGen, _ValueGen, State) ->
 	try
 		erlcloud_s3:get_object(State#state.bucket, integer_to_list(Key)),
     	{ok, State}
-	catch _X:_Y ->
+	catch
+		_X:{aws_error,{http_error,404,_,_}} = _Y ->
         ?ERROR("Error on GET ~p: ~p ~p\n", [Key, _X, _Y]),
-		{error, object_not_found, State}
+				{error, not_found, State};
+    _X:{aws_error,{socket_error,timeout}} = _Y ->
+				?ERROR("Error on GET ~p: ~p ~p\n", [Key, _X, _Y]),
+				{error, timeout, State}
 	end;
 
 run(delete, KeyGen, _ValueGen, State) ->
@@ -78,8 +100,12 @@ run(delete, KeyGen, _ValueGen, State) ->
 	try
 		erlcloud_s3:delete_object(State#state.bucket, integer_to_list(Key)),
 		{ok, State}
-	catch _X:_Y ->
-		?ERROR("Error on DELETE ~p: ~p ~p\n", [Key, _X, _Y]),
-		{ok, State}
+	catch
+		_X:{aws_error,{http_error,404,_,_}} = _Y ->
+			?ERROR("Error on DELETE ~p: ~p ~p\n", [Key, _X, _Y]),
+			{error, not_found, State};
+		_X:{aws_error,{socket_error,timeout}} = _Y ->
+			?ERROR("Error on DELETE ~p: ~p ~p\n", [Key, _X, _Y]),
+			{error, timeout, State}
 	end.
 
